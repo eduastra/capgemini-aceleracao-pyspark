@@ -1,0 +1,92 @@
+Pergunta 1
+
+df_airports = df_airports.withColumn('alt',(
+    F.when(
+        F.col('alt') < 0, 0)
+     .when(
+        check_empty_column('alt'), "M").otherwise(F.col('alt'))
+))
+df_airports.select('*').where(df_airports.alt ==  0).show()
+df_airports.show(20)
+#apenas valores 0 na coluna alt
+df_airports[df_airports.alt.isin('0')].show()
+
+Pergunta 2
+
+#valor em string A ou horario e data? 
+    
+df_airports = df_airports.withColumn('dst', (
+    F.when(
+        (F.col('tz') >= -7) &
+        (F.col('tz') <= -5), 'A'
+    ).otherwise(F.col('dst'))
+))
+    
+df_airports.show(15)
+#apenas valores min de -7 e max de -5 na coluna TZ
+df_airports[df_airports.tz.isin(-7 ,-5)].show()
+
+Pergunta 3
+#apenas coluna dst com valor U
+df_airports[df_airports.dst.isin('U')].show()
+df_airports = df_airports.withColumn('dst', (
+    F.when(
+        (F.col('dst') == 'U'), 'A'
+    ).otherwise(F.col('dst'))
+))
+
+df_airports.show(15)
+#apenas coluna dst com valor U
+df_airports[df_airports.dst.isin('A')].show()
+
+Pergunta 4
+
+#ALASKA: Quando a longitude for menor que -124.
+#OFFSHORE: Quando a longitude for maior que -50 ou a latitude for menor que 24.
+#MAINLAND-WEST: Quando a longitude for menor ou igual -95 na região dos EUA.
+#MAINLAND-EAST: Quando a longitude for maior que -95 na região dos EUA.
+#NaN: Caso não atenda nenhuma das condições acima
+
+#check_column_range('lon', -50, 24)
+
+df_airports = df_airports.withColumn('region', (
+    F.when(
+        F.col('lon') < -124, 'ALASKA'
+    ).when(
+        ((F.col('lon') > -50) |
+         (F.col('lat') < 24)), 'OFFSHORE'
+    ).when(
+        F.col('lon') <= -95, 'MAINLAND-WEST'
+    ).when(
+        F.col('lon') >= -95, 'MAINLAND-EAST'
+    ).otherwise('NaN')
+))
+
+df_airports.show(15)
+#Conferindo se todos valores entraram
+df_airports.select('region').distinct().show()
+
+Pergunta 5
+#AP: "Airport", "Tradeport", "Heliport", "Airpor", ou "Arpt"
+#AD: "Aerodrome"
+#AK : "Airpark" ou "Aero Park"
+#AS : "Station" ou "Air Station"
+#FL : "Field" ou "Fld"
+#NaN : Caso não atenda nenhuma das condições acima
+
+# Usando dataframe
+AP_TYPES = ["Airport", "Tradeport", "Heliport", "Airpor", "Arpt"]
+
+df_airports = df_airports.withColumn('type',(
+        F.when(F.col('name').rlike(create_regex_from_list(AP_TYPES)), 'AP')
+         .when(F.col('name').rlike("(AERODROME)"), 'AD')
+         .when((
+             (F.col('name').rlike(create_regex_from_list(["Airpark", 'Aero Park'])))), 'AS')
+         .when(
+             (F.col('name').rlike(create_regex_from_list(['Field', "Fld"]))), 'FL'
+         ).otherwise('NaN')
+    ))
+
+df_airports.show(15)
+df_airports.select('Type').distinct().show()
+
