@@ -1,0 +1,91 @@
+Pergunta 1
+considere as seguintes chaves em comum:
+
+airports_qa.faa
+
+airports_qa.faa-flights_qa.dest,
+
+planes_qa.tailnum-flights_qa.tailnum
+
+#3 joins com planilha renomeadas em airports_qualidade2
+qa_challenge_df = flights_qa.join(airports_qa, (flights_qa.fl_origin == airports_qa.air_faa) ,'left')\
+                            .join(airports_qa2, (flights_qa.fl_destiny  == airports_qa2.air2_faa),'left')\
+                            .join(planes_qa, (flights_qa.fl_tailnum == planes_qa.pl_tailnum),'left')
+qa_challenge_df.show()
+
+Pergunta 2
+#criando no um novo DF 
+all_cols_join = spark.getOrCreate().read.parquet("parquet_files/all_join.parquet")
+#joined_dfs   = spark.getOrCreate().read.parquet("parquet_files/newjoin.parquet") lá em cima
+joined_dfs.show()
+joined_dfs.createOrReplaceTempView('reports_view')
+#from collections import Counter
+#import json
+
+joined_dfs.printSchema( )
+
+#transformation_c_dfs = spark.getOrCreate().read.parquet("parquet_files/transformed_join.parquet") lá em cima
+for i in ['M', 'F', 'I', 'S', 'T']:
+    print(i)
+    qa_challenge_df.select([F.count(F.when(F.col(c) ==i, 1)).alias(c) 
+    for c in 
+    qa_challenge_df.columns]).show()
+
+Pergunta 3
+i, most_M = float('-inf'), '' #most_M = dados faltantes
+results = []
+
+for c in qa_challenge_df.columns:
+    if 'qa' in c:
+        results.append(qa_challenge_df.filter(~check_empty_column(c) & 
+        (F.col(c) =='M')).groupBy(F.substring(c, 1, 1)
+        .alias(c)).count().toPandas())
+
+for _row in results:
+    c = _row.columns[0]
+    if _row.values.size:
+        v = _row.values[0]
+        if v[1] > i:
+            i = v[1]
+            most_F = c
+
+print(most_M, ' tem maior aparições: ' ,i)
+
+Pergunta 4
+i, most_F = float('-inf'), ''
+results = []
+for c in qa_challenge_df.columns:
+    if 'qa' in c:
+        results.append(qa_challenge_df.filter((F.col(c)!='') & 
+        (F.col(c) =='F')).groupBy(F.substring(c, 1, 1).alias(c)).count().toPandas())
+
+for _row in results:
+    c = _row.columns[0]
+    if _row.values.size:
+        v = _row.values[0]
+        if v[1] > i:
+            i = v[1]
+            most_F = c
+
+print(most_F, ' tem o maior valor: ' ,i)
+
+Pergunta 5
+results = []
+# joins com planilha renomeadas em airports_qualidade2
+# 5. Qual variável apresenta maior número de formatos errados?
+for c in qa_challenge_df.columns:
+    if 'qa' in c:
+        results.append(qa_challenge_df.filter((F.col(c)!='') & 
+        (F.col(c) =='I')).groupBy(F.substring(c, 1, 1).alias(c)).count().toPandas())
+
+i, most_I = float('-inf'), '' 
+for _row in results:
+    c = _row.columns[0]
+    if _row.values.size:
+        v = _row.values[0]
+        if v[1] > i:
+            i = v[1]
+            most_F = c
+
+print(most_I, ' tem ' ,i , 'aparições fora do intervalo')
+
