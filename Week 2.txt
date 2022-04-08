@@ -400,7 +400,105 @@ data = df_planes.withColumn('engine_type', (
 data.show()
 
 
+#Fligths
 
+Pergunta 1
+
+data = df_flights.withColumn('hour',(
+            F.when(
+                check_empty_column('hour'), 0
+            ).otherwise(F.col('hour'))
+        )).withColumn('minute',(
+            F.when(
+                check_empty_column('minute'), 0
+            ).otherwise(F.col('minute'))
+        ))
+data.select('*').where(F.col('hour').isNull() | F.col('minute').isNull()).show()
+
+data.show()
+
+df_flights = data
+
+Pergunta 2
+data = df_flights.withColumn('hour', (
+    F.when(
+        (F.col('hour') == 24), 0
+    ).otherwise(F.col('hour'))
+))
+
+data.select('*').where(F.col('hour').isNull()).show()
+data.select('*').where(F.col('hour') > 23).show()
+
+
+data.show()
+
+df_flights = data
+
+Pergunta 3
+mapping = F.create_map()
+data = df_flights.withColumn('dep_datetime', (
+    F.when(
+        check_empty_column('minute'), None
+    ).otherwise(F.concat(
+        F.col('year'), F.lit('-'), F.col('month'),F.lit('-'),F.col('day'),
+        F.lit(' '), F.col('hour'), F.lit(':'), F.col('minute'), F.lit(':00')
+    ))
+))
+
+data.show()
+
+df_flights = data
+
+Pergunta 4
+data = df_flights.withColumn('dep_time', (
+    F.when(
+        check_empty_column('dep_time'), (
+                F.concat(
+                    F.col('hour'), F.col('minute')
+                )
+        )
+    ).otherwise(F.col('dep_time'))
+))
+
+data.show()
+
+df_flights.select('*').where(df_flights.dep_time == None).show()
+
+Pergunta 5
+data = df_flights.withColumn('dep_delay', (
+    F.when(
+        (check_empty_column('dep_delay')), 0
+    ).otherwise(F.col('dep_delay'))
+))
+
+data.select('*').where(F.col('dep_delay').isNull()).show()
+
+
+data.show()
+
+df_flights = data
+
+Pergunta 6
+data = df_flights.withColumn('arr_delay', (
+    F.when(
+        (check_empty_column('arr_delay')), 0
+    ).otherwise(F.col('arr_delay'))
+))
+
+data.select('*').where(F.col('arr_delay').isNull()).show()
+
+
+data.show()
+
+df_flights = data
+
+Pergunta 7
+df_flights.show(10)
+
+data = df_flights.drop(*('year', 'month', 'day', 'hour', 'minute'))
+data.show(10)
+
+df_flights = data
 
 
 
