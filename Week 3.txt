@@ -107,5 +107,224 @@ airport_df = airport_df.withColumn("qa_dst",
         )
 
 
+#Adicionando o Planes 
+
+#lets describe our new file
+planes_file = "./datasets/planes.csv"
+
+#set our schema (that you can see on glossary)
+schema = StructType([
+    StructField("tailnum",      StringType()),
+    StructField("year",         IntegerType()),
+    StructField("type",         StringType()),
+    StructField("manufacturer", StringType()),
+    StructField("model",   StringType()),
+    StructField("engines", IntegerType()),
+    StructField("seats",   IntegerType()),
+    StructField("speed",   IntegerType()),
+    StructField("engine",  StringType())
+])
+
+
+#lets take the rdd to work with too
+planes_rdd = planes_df.rdd
+
+#don't forget to create a view (important to work with spark sql)
+planes_df.createOrReplaceTempView('planes_view')
+planes_rdd.take(10)
+planes_df.show(10)
+
+Pergunta 1
+planes_df = planes_df.withColumn("qa_tailnum", 
+                when((col("tailnum") == "")      |
+                    (col("tailnum").isNull())   |
+                    (col('tailnum').rlike('\t') |
+                    (col('tailnum').rlike(' +'))), "M")\
+                .when((length("tailnum") != 5), "S")\
+                .when(
+                    (col('tailnum').substr(1, 1) != 'N')   &
+                    (col('tailnum').substr(-1, -1) != 'Z') & 
+                    (col('tailnum').substr(2,4).rlike('^([^0-9]*)$')), "F")\
+                .when((col("tailnum").substr(1,1) == "I")  |
+                    (col("tailnum").substr(1,1) == "O") |
+                    (col("tailnum").substr(1,1) == "0"), "FE")\
+                .when((col("tailnum").substr(1,1) != "N"),  "FN")\
+                .otherwise(col('tailnum'))
+            )
+
+planes_df.show()
+
+Pergunta 2
+M : Indica que está com dado faltante.
+I : Indica que o valor excede o intervalo [1950, +∞).
+
+planes_df = planes_df.withColumn("qa_year", 
+                when((col("year") == "")      |
+                    (col("year").isNull())   |
+                    (col('year').rlike('\t') |
+                    (col('year').rlike(' +'))), "M")\
+                .when((col("year") < 1950), "I")\
+                .otherwise(col('year'))
+            )
+planes_df.select('qa_year').show()
+
+Pergunta 3
+M : Indica que está com dado faltante.
+C : Indica que o valor não pertence a nenhuma categoria esperada:
+Fixed wing multi engine
+Fixed wing single engine
+Rotorcraft
+
+type_categories = ['Fixed wing multi engine', 'fixed wing single engine', 'Rotorcraft']
+
+planes_df = planes_df.withColumn("qa_type", 
+                when((col("type") == "")      |
+                    (col("type").isNull())   |
+                    (col('type').rlike('\t') |
+                    (col('type').rlike(' +'))), "M")\
+                .when((col("type").isin(type_categories) == False),  "C")\
+                .otherwise(col('type'))
+            )
+
+planes_df.select('qa_type').show()
+
+Pergunta 4
+M : Indica que está com dado faltante.
+C : Indica que o valor não pertence a nenhuma categoria esperada: AIRBUS BOEING BOMBARDIER CESSNA EMBRAER SIKORSKY CANADAIR PIPER MCDONNELL DOUGLAS CIRRUS BELL KILDALL GARY LAMBERT RICHARD BARKER JACK ROBINSON HELICOPTER GULFSTREAM MARZ BARRY
+
+manufacture_categories = ["AIRBUS", "BOEING","BOMBARDIER","CESSNA","EMBRAER","SIKORSKY","CANADAIR",
+                          "PIPER","MCDONNELL DOUGLAS","CIRRUS","BELL","KILDALL GARY","LAMBERT RICHARD",
+                          "BARKER JACK","ROBINSON HELICOPTER","GULFSTREAM","MARZ BARRY"]
+
+#using a udf
+from pyspark.sql.functions import udf
+from pyspark.sql.types import StructType
+
+
+# dica do eugênio -> df.map(lambda x: any([x.contains(f"%{y}%") for y in MANUFACTURERS]))
+
+@udf
+def qa_manufacturer(el):
+    if(any([el.__contains__(f"{y}") for y in manufacture_categories])):
+        return el
+    else:
+        return "M"
+
+planes_df.select("manufacturer", qa_manufacturer('manufacturer')).show()
+
+#lets go back to our df
+
+planes_df = planes_df.withColumn("qa_manufacturer", 
+                when((col("manufacturer") == "")      |
+                    (col("manufacturer").isNull()), "M")\
+                .when(
+                    (col("manufacturer").contains("AIRBUS%")) |
+                    (col("manufacturer").contains("BOEING%")) |
+                    (col("manufacturer").contains("BOMBARDIER%")) |
+                    (col("manufacturer").contains("CESSNA%"))   |
+                    (col("manufacturer").contains("EMBRAER%"))  |
+                    (col("manufacturer").contains("SIKORSKY%")) |
+                    (col("manufacturer").contains("CANADAIR%")) |
+                    (col("manufacturer").contains("PIPER%"))    |
+                    (col("manufacturer").contains("MCDONNELL DOUGLAS%")) |
+                    (col("manufacturer").contains("CIRRUS%")) |
+                    (col("manufacturer").contains("BELL%"))   |
+                    (col("manufacturer").contains("KILDALL GARY%"))    |
+                    (col("manufacturer").contains("LAMBERT RICHARD%")) |
+                    (col("manufacturer").contains("BARKER JACK%"))     |
+                    (col("manufacturer").contains("ROBINSON HELICOPTER%")) |
+                    (col("manufacturer").contains("GULFSTREAM%")) |
+                    (col("manufacturer").contains("MARZ BARRY%")), "C"
+                    )\
+                .otherwise(col('manufacturer'))
+            )
+planes_df.select('qa_manufacturer').show()
+
+Pergunta 5
+"""
+M : Indica que está com dado faltante.
+F : Indica que não respeita o formato esperado:
+Modelos AIRBUS devem começar com "A"
+Modelos BOEING devem começar com "7"
+Modelos BOMBARDIER e CANADAIR devem começar com "CL"
+Modelos MCDONNELL DOUGLAS devem começar com "MD" ou "DC"
+"""
+
+planes_df = planes_df.withColumn("qa_model", 
+                when((col("model") == "")     |
+                    (col("model").isNull())   |
+                    (col('model').rlike('\t') |
+                    (col('model').rlike(' +'))), "M")\
+                .when(
+                    (col('manufacturer') == "AIRBUS") &
+                    (col('model').substr(1, 1) != 'A'), "F")\
+                .when(
+                    (col('manufacturer') == "BOEING") &
+                    (col('model').substr(1, 1) != '7'), "F")\
+                .when(
+                    ((col('manufacturer') == "BOMBARDIER") |
+                    (col('manufacturer') == "CANADAIR"))   &
+                    (col('model').substr(1, 1) != 'CL'), "F")\
+                .when(
+                    (col('manufacturer') == "MCDONNELL DOUGLAS") &
+                    ((col('model').substr(1, 1) != 'MD') |
+                    (col('model').substr(1, 1) != 'DC')), "F")\
+                .otherwise(col('model'))
+            )
+planes_df.select('qa_model').show()
+
+Pergunta 6
+M : Indica que está com dado faltante.
+I : Indica que o valor excede o intervalo [1, 4].
+A : Indica que o valor é alfanumérico
+
+planes_df = planes_df.withColumn("qa_engines", 
+                when((col("engines") == "") |
+                    (col("engines").isNull()), "M")\
+                .when((col("engines") < 1) |
+                    (col("engines") > 4), "I")\
+                .when((col('engines').rlike('^[0-9]*$') == False), "A")\
+                .otherwise(col('engines'))
+            )
+planes_df.select('qa_engines').show()
+
+Pergunta 7
+planes_df = planes_df.withColumn("qa_seats", 
+                when((col("seats") == "")      |
+                    (col("seats").isNull()), "M")\
+                .when((col("seats") < 2) |
+                    (col('seats') > 500), "S")\
+                .when((col('seats').rlike('^([^0-9]*)$') == False), "F")\
+                .otherwise(col('seats'))
+            )
+planes_df.show()
+
+Pergunta 8
+planes_df = planes_df.withColumn("qa_speed", 
+                when((col("speed") == "")      |
+                    (col("speed").isNull()), "M")\
+                .when((col("speed") < 50.0) |
+                    (col('speed') > 150.0), "S")\
+                .when((col('speed').rlike('^([^0-9]*)$') == False), "F")\
+                .otherwise(col('speed'))
+            )
+planes_df.select('qa_speed').show()
+
+Pergunta 9
+engine_categories = ["Turbo-fan", "Turbo-jet","Turbo-prop","Turbo-prop","4 Cycle"]
+
+planes_df = planes_df.withColumn("qa_engine", 
+                when((col("engine") == "")      |
+                    (col("engine").isNull()), "M")\
+                .when(
+                    (col("engine").contains("Turbo-fan%")) |
+                    (col("engine").contains("Turbo-jet%")) |
+                    (col("engine").contains("Turbo-prop%")) |
+                    (col("engine").contains("Turbo-shaft%"))   |
+                    (col("engine").contains("Cycle%")), "C"
+                    )\
+                .otherwise(col('engine'))
+            )
+planes_df.select('qa_engine').show()
 
           
