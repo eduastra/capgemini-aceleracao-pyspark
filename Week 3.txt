@@ -1,0 +1,111 @@
+Pergunta 1
+
+from pyspark.sql.functions import col, when, length
+import re
+
+airport_df = airport_df.withColumn("qa_faa", 
+             when((col("faa") == "") |
+             (col("faa").isNull()) , "M")\
+            .when(
+                 (length("faa").between(3 , 5)) &
+                 (col('faa').rlike(REGEX_ALPHA)) | (col('faa').rlike('^([^0-9]*)$')), "F"
+            )\
+            .otherwise(col('faa'))
+
+Pergunta 2
+# M : Indica que está com dado faltante.
+
+airport_df = airport_df.withColumn("qa_name", 
+             when((col("name") == "")     |
+                  (col("name").isNull())  |
+                  (col('faa').rlike('\t') |
+                  (col('faa').rlike(' +'))), "M")\
+           .otherwise(col('name'))
+        )
+
+Pergunta 3
+M : Indica que está com dado faltante. ✔️
+I : Indica que o valor excede o intervalo [-180, 180]. ✔️
+A : Indica que o valor é alfanumérico. ✔️
+
+airport_df = airport_df.withColumn("qa_lat", 
+             when((col("lat") == "")      |
+                  (col("lat").isNull())   |
+                  (col('lat').rlike('\t') |
+                  (col('lat').rlike(' +'))), "M")\
+             .when(
+                 (col("lat") > '180.0') & 
+                 (col("lat") < '-180.0'), "I"
+            )\
+            .when((col('lat').rlike('[a-zA-Z ]')), "A")
+            .otherwise(col('lat'))
+        )
+
+Pergunta 4
+M : Indica que está com dado faltante. ✔️
+I : Indica que o valor excede o intervalo [-180, 180]. ✔️
+A : Indica que o valor é alfanumérico. ✔️
+
+airport_df = airport_df.withColumn("qa_lon", 
+             when((col("lon") == "")      |
+                  (col("lon").isNull())   |
+                  (col('lon').rlike('\t') |
+                  (col('lon').rlike(' +'))), "M")\
+             .when(
+                 (col("lon") > '180.0') & 
+                 (col("lon") < '-180.0'), "I"
+            )\
+            .when((col('lon').rlike('[a-zA-Z ]')), "A")
+            .otherwise(col('lon'))
+
+Pergunta 5
+M : Indica que está com dado faltante. ✔️
+I : Indica que o valor excede o intervalo [0, +∞). ✔️
+A : Indica que o valor é alfanumérico. ✔️
+
+airport_df = airport_df.withColumn("qa_alt", 
+             when((col("alt") == "")      |
+                  (col("alt").isNull())   |
+                  (col('alt').rlike('\t') |
+                  (col('alt').rlike(' +'))), "M")\
+             .when((col("alt") < '0'), "I")\
+            .when( (col('alt').rlike('[a-zA-Z ]')), "A")
+            .otherwise(col('alt'))
+        )
+
+Pergunta 6
+M : Indica que está com dado faltante. ✔️
+I : Indica que o valor excede o intervalo [-11, +14]. ✔️
+A : Indica que o valor é alfanumérico. ✔️
+
+airport_df = airport_df.withColumn("qa_tz", 
+             when((col("tz") == "")      |
+                  (col("tz").isNull())   |
+                  (col('tz').rlike('\t') |
+                  (col('tz').rlike(' +')) ), "M")\
+             .when((col("tz") < '-11.0') &
+                   (col("tz") > '14.0'), "I")\
+            .when( (col('tz').rlike('[a-zA-Z ]')), "A")
+            .otherwise(col('tz'))
+        )
+
+Pergunta 7
+M : Indica que está com dado faltante. ✔️
+C : Indica que o valor não pertence a nenhuma das categorias esperadas → E, A, S, O, Z, N, U. ****
+N : Indica que o valor é numérico. ✔️
+
+expected_categorys = ["E", "A", "S", "O", "Z", "N", "U"]
+
+airport_df = airport_df.withColumn("qa_dst", 
+            when((col("dst") == "")      |
+                 (col("dst").isNull())   |
+                 (col('dst').rlike('\t') |
+                 (col('dst').rlike(' +')) ), "M")\
+            .when( (col('dst').rlike('([0-9])') == True), "N")\
+            .when((col("dst").isin(expected_categorys) == False) , "C")\
+            .otherwise(col('dst'))
+        )
+
+
+
+          
