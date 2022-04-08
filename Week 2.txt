@@ -144,4 +144,266 @@ df_airports.show(15)
 #conferindo valores
 df_airports.select('administration').distinct().show()
 
+# Considere o dataset planes.csv para realizar as seguintes tarefas:
+
+data = df_planes.withColumn('tailchar',(
+    F.when(check_empty_column('tailnum'), None)
+     .when(F.col('tailnum').rlike(REGEX_NNUMBER) ,tailnum_chars(F.col('tailnum')))
+) )
+data.show(10)
+#apenas false
+df_planes[df_airports.military.isin(False)].show()
+
+Pergunta 2
+df_planes = df_planes.withColumn('year', (
+    F.when(F.col('year') == 0, 1996)
+     .otherwise(F.col('year'))
+))
+
+df_planes.show(10)
+
+
+Pergunta 3
+
+#Ordene por manufacturer, model e year
+#Use o valor da primeira linha anterior que compartilhe os mesmos valores das seguintes colunas, em prioridade:
+#A. manufacturer e model
+#B. manufacturer
+
+from pyspark.sql.window import Window
+
+year_window = Window.partitionBy().orderBy("manufacturer", "model", "year")
+
+valueColumns = ["manufacturer", "model", "year"]
+
+data = df_planes.select(
+    "*",
+     *[F.lag(c).over(year_window).alias("old_" + c) for c in valueColumns]
+)
+
+df_planes = data.withColumn('year',(
+                F.when(
+                    (F.col('manufacturer') == F.col('old_manufacturer')) &
+                    (F.col('model')        == F.col('old_model')), None
+                ).when(
+                    (F.col('manufacturer') == F.col('old_manufacturer')), None
+                ).otherwise(F.col('year'))
+            ))
+
+df_planes.show()
+
+df_planes.select('*').where(df_planes.year.isNotNull()).show()
+
+Pergunta 4
+
+from datetime import date
+
+current_year = date.today().year
+
+df_planes = df_planes.withColumn('age',(
+                F.when(
+                   check_empty_column('year'), None
+                ).otherwise(( current_year - F.col('year')))
+            ))
+
+df_planes.show()
+df_planes.select('*').where(df_planes.age.isNotNull()).show()
+
+df_planes = df_planes.drop('old_manufacturer', 'old_model', 'old_year')
+
+Pergunta 5
+#Fixed wing multi engine: MULTI_ENG
+#Fixed wing single engine: SINGLE_ENG
+#Rotorcraft: ROTORCRAFT
+
+data = df_planes.withColumn('type', (
+    F.when(
+        check_empty_column('type'), None
+    ).when(
+        F.col('type').rlike('.*(Fixed wing multi engine).*'), 'MULTI_ENG'
+    ).when(
+        F.col('type').rlike('.*(Fixed wing single engine).*'), 'SINGLE_ENG'
+    ).when(
+        F.col('type').rlike('.*(Rotorcraft).*'), 'ROTORCRAFT'
+    )
+))
+
+data.select('*').where(df_planes.age.isNotNull()).show()
+data.show(20)
+
+Pergunta 6
+#AIRBUS
+#BOEING
+#BOMBARDIER
+#CESSNA
+#EMBRAER
+#SIKORSKY
+#CANADAIR
+#PIPER
+#MCDONNELL DOUGLAS
+#CIRRUS
+#BELL
+#KILDALL GARY
+#LAMBERT RICHARD
+#BARKER JACK
+#ROBINSON HELICOPTER
+#GULFSTREAM
+#MARZ BARRY
+
+# Usando dataframe
+
+PLANES_MANUFACTURERS = ["AIRBUS","BOEING","BOMBARDIER","CESSNA","EMBRAER","SIKORSKY","CANADAIR","PIPER","MCDONNELL DOUGLAS","CIRRUS","BELL","KILDALL GARY","LAMBERT RICHARD","BARKER JACK","ROBINSON HELICOPTER","GULFSTREAM","MARZ BARRY"]
+REGEX_MANUFACTURERS = r'|'.join(map(lambda x : f".*({x}).*", PLANES_MANUFACTURERS))
+"""
+def get_byregex_and_extract(r_pattern, col_to_search):
+    return (getattr(re.search(r_pattern, F.col(col_to_search), re.IGNORECASE), 'groups', lambda:[""])().upper())
+
+nteste = F.udf(get_byregex_and_extract)
+
+data = df_planes.withColumn('q_manufacturer', (
+                F.when(check_empty_column('manufacturer'), 'M')
+                 .when(F.col('manufacturer').rlike(REGEX_MANUFACTURERS),
+                    nteste(REGEX_MANUFACTURERS, 'manufacturers')
+                 )
+            ))
+
+data.select('*').where(data.q_manufacturer.isNotNull()).show()"""
+
+data = df_planes.withColumn('manufacturer',(
+                F.when(check_empty_column('manufacturer'), 'M')
+                 .when(
+                     F.col('manufacturer').rlike('.*(AIRBUS).*'),"AIRBUS"
+                 )
+                 .when(
+                     F.col('manufacturer').rlike('.*(BOEING).*'),"BOEING"
+                 )
+                 .when(
+                     F.col('manufacturer').rlike('.*(BOMBARDIER).*'),"BOMBARDIER"
+                 )
+                 .when(
+                     F.col('manufacturer').rlike('.*(CESSNA).*'),"CESSNA"
+                 )
+                 .when(
+                     F.col('manufacturer').rlike('.*(EMBRAER).*'),"EMBRAER"
+                 )
+                 .when(
+                     F.col('manufacturer').rlike('.*(SIKORSKY).*'),"SIKORSKY"
+                 )
+                 .when(
+                     F.col('manufacturer').rlike('.*(CANADAIR).*'),"CANADAIR"
+                 )
+                 .when(
+                     F.col('manufacturer').rlike('.*(PIPER).*'),"PIPER"
+                 )
+                 .when(
+                    F.col('manufacturer').rlike('.*(MCDONNELL DOUGLAS).*'),"MCDONNELL DOUGLAS"
+                 )
+                 .when(
+                     F.col('manufacturer').rlike('.*(CIRRUS).*'),"CIRRUS"
+                 )
+                 .when(
+                     F.col('manufacturer').rlike('.*(BELL).*'),"BELL"
+                 )
+                 .when(
+                     F.col('manufacturer').rlike('.*(KILDALL GARY).*'),"KILDALL GARY"
+                 )
+                 .when(
+                     F.col('manufacturer').rlike('.*(LAMBERT RICHARD).*'),"LAMBERT RICHARD"
+                 )
+                 .when(
+                     F.col('manufacturer').rlike('.*(BARKER JACK).*'),"BARKER JACK"
+                 )
+                 .when(
+                     F.col('manufacturer').rlike('.*(ROBINSON HELICOPTER).*'),"ROBINSON HELICOPTER"
+                 )
+                 .when(
+                     F.col('manufacturer').rlike('.*(GULFSTREAM).*'),"GULFSTREAM"
+                 )
+                 .when(
+                     F.col('manufacturer').rlike('.*(MARZ BARRY).*'),"MARZ BARRY"
+                 )
+            ))
+
+data.show()
+
+#com rdd
+#lambda manufacture:  manufacture, re.IGNORECASE), 'groups', lambda:[u""])()[0].upper()
+#rdd_df_planes.map(lambda manufacturer: re.search(REGEX_MANUFACTURERS, manufacturer[3], re.IGNORECASE).group(1)  ).collect()
+data = df_planes.withColumn('model', (
+            F.when(
+                F.col('model').rlike('\(.*\)'), F.regexp_replace('model', r'[(].*[)]', '')
+
+            ).otherwise(F.col('model'))
+        ))
+
+#check for values with parentheses
+data.select('*').where(data.model.rlike('\(.*\)')).sort(F.desc('model')).show()
+
+parenthesis_sql = spark.getOrCreate().sql(
+"""
+select *,
+        case 
+            when model like '\(.*\)' then regexp_replace(model, '[(].*[)]', '')
+        else
+            model
+        end as model
+
+    from planes_view
+"""
+)
+
+parenthesis_sql.show()
+
+Pergunta 8
+data = df_planes.withColumn("speed", (F.when(
+                                    check_empty_column('speed'), (F.ceil(F.column('seats').cast(FloatType()) /.38))
+                                ).otherwise(F.col('speed')))
+                           )
+data.show()
+
+sql_results = spark.getOrCreate().sql("""
+select
+        *,
+        case
+            when 
+               speed is null or speed like '' then ceil(seats/.38)
+            else
+               speed
+        end as speed
+    from planes_view
+""") 
+
+Pergunta 9
+# 9. Crie a coluna engine_type (category) e atribua os valores a partir de substrings identificadas na coluna engine de acordo com as condições abaixo:
+#FAN : "Turbo-fan"
+#JET : "Turbo-jet"
+#PROP : "Turbo-prop"
+#SHAFT : "Turbo-shaft"
+#CYCLE : "4 Cycle"
+
+data = df_planes.withColumn('engine_type', (
+    F.when(
+        check_empty_column('engine'), 'M'
+    ).when(
+        F.col('engine') == 'Turbo-fan', 'FAN'
+    ).when(
+        F.col('engine') == 'Turbo-jet', 'JET'
+   ).when(
+        F.col('engine') == 'Turbo-prop', 'PROP'
+   ).when(
+        F.col('engine') == 'Turbo-shaft', 'SHAFT'
+   ).when(
+        F.col('engine') == '4 Cycle', 'Cycle'
+   )
+))
+
+data.show()
+
+
+
+
+
+
+
+
 
