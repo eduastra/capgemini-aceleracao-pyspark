@@ -90,3 +90,58 @@ df_airports = df_airports.withColumn('type',(
 df_airports.show(15)
 df_airports.select('Type').distinct().show()
 
+Pergunta 6
+
+#True : "Base", "Aaf", "AFs", "Ahp", "Afb", "LRRS", "Lrrs", "Arb", "Naf", "NAS", "Nas", "Jrb", "Ns", "As", "Cgas", "Angb"
+#False : Caso nenhuma substrig acima seja identificada
+
+# Usando dataframe
+MILITARY_TYPES = ["Base", "Aaf", "AFs", "Ahp", "Afb", "LRRS", "Lrrs", "Arb", "Naf", "NAS", "Nas", "Jrb", "Ns",
+"As", "Cgas", "Angb"]
+
+df_airports = df_airports.withColumn('military',(
+        F.when(
+            F.col('name').rlike(create_regex_from_list(MILITARY_TYPES)), True
+        ).otherwise(False)
+    ))
+
+df_airports.show(15)
+df_airports.select('military').distinct().show()
+df_airports.select('*').where(df_airports.military == False).show()
+df_airports[df_airports.military.isin(True)].show()
+#apenas false
+df_airports[df_airports.military.isin(False)].show()
+
+
+Pergunta 7
+
+#I: "International", "Intl", ou "Intercontinental"
+#N: "National", "Natl"
+#R : "Regional", "Reigonal", "Rgnl", "County", "Metro" ou "Metropolitan"
+#M : "Municipal" "Muni", ou "City"
+#NaN : Caso não atenda nenhuma das condições acima
+
+#lists
+I_TYPES = ["International", "Intl", "Intercontinental"]
+N_TYPES = ["National", "Natl"]
+R_TYPES = ["Regional", "Reigonal", "Rgnl", "County", "Metro" "Metropolitan"]
+M_TYPES = ["Municipal", "Muni", 'City']
+
+# Usando dataframe
+df_airports = df_airports.withColumn('administration',(
+        F.when(
+            F.col('name').rlike(create_regex_from_list(I_TYPES)), 'I'
+        ).when(
+            F.col('name').rlike(create_regex_from_list(N_TYPES)), 'N'
+        ).when(
+            F.col('name').rlike(create_regex_from_list(R_TYPES)), 'R'
+        ).when(
+            F.col('name').rlike(create_regex_from_list(M_TYPES)), 'M'
+        ).otherwise('NaN')
+    ))
+
+df_airports.show(15)
+#conferindo valores
+df_airports.select('administration').distinct().show()
+
+
