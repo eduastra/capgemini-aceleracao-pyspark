@@ -1,0 +1,129 @@
+
+# Installing required packages
+!pip install pyspark
+!pip install findspark
+import findspark
+findspark.init()
+
+import re
+from pyspark import SparkContext, SparkConf
+from pyspark.sql import SparkSession
+from pyspark.sql import functions as F
+from pyspark.sql.types import StructType, StructField, StringType, IntegerType, FloatType
+
+# Expressoes regulares comuns, pode-ser melhoradda
+REGEX_ALPHA    = r'[:aplha:]+'
+REGEX_INTEGER  = r'[:digit:]+'
+REGEX_FLOAT    = r'[:digit:]+\.[:digit:]+'
+REGEX_ALPHANUM = r'[:alnum:]+'
+REGEX_EMPTY_STR= r'[:space:]+$'
+REGEX_SPECIAL  = r'[:punct:]+'
+REGEX_NNUMBER  = r'^N[1-9][0-9]{2,3}([ABCDEFGHJKLMNPRSTUVXWYZ]{1,2})'
+REGEX_NNUMBER_INVALID = r'(N0.*$)|(.*[IO].*)'
+#no inicio da linha pode ser [0-1]?[0-9])|(2[0-3]), no final ([0-5][0-9])$
+REGEX_TIME_FMT = r'^(([0-1]?[0-9])|(2[0-3]))([0-5][0-9])$'
+
+# Criar o contexto do spark
+sc = SparkContext()
+
+# Instancia do criador de sessao do spark
+spark = (SparkSession.builder
+                     .master("local[]")
+                     .appName("Desafio Transformação - Week 2"))
+
+import re
+#helper functions
+def check_empty_column(col):
+    return (F.col(col).isNull() | (F.col(col) == '') | F.col(col).rlike(REGEX_EMPTY_STR))
+
+def check_column_range(col, from_value, to_value ):#, leftInclusive = False, rightIncluse = False):
+    check_range_expression = "(" + str(F.col(col)) + (" >= " if leftInclusive else " > ") + str(from_value) + " and " \
+                                 + str(F.col(col)) + (" <= " if rightIncluse  else " < ") +")" 
+    return eval(check_range_expression)
+    
+def create_regex_from_list(_list):
+    return r'|'.join(map(lambda x : f".*({x}).*", _list))
+
+tailnum_chars = F.udf(lambda value: ''.join([c for c in value if not c.isdigit()])[1:])
+
+@F.udf
+def get_byregex_and_extract(r_pattern, col_to_search):
+    return (getattr(re.search(r_pattern, F.col(col_to_search), re.IGNORECASE), 'groups', lambda:[""])()[0].upper())
+
+getbyreg = F.udf(lambda r_pattern,col_to_search: getattr(re.search(r_pattern, col_to_search, re.IGNORECASE), 'groups', lambda:[u""])()[0].upper())
+
+schema_airports = StructType([
+    StructField("faa",  StringType(),  True),
+    StructField("name", StringType(),  True),
+    StructField("lat",  FloatType(),   True),
+    StructField("lon",  FloatType(),   True),
+    StructField("alt",  IntegerType(), True),
+    StructField("tz",   IntegerType(), True),
+    StructField("dst",  StringType(),  True)
+])
+
+schema_planes = StructType([
+    StructField("tailnum",      StringType(),  True),
+    StructField("year",         IntegerType(), True),
+    StructField("type",         StringType(),  True),
+    StructField("manufacturer", StringType(),  True),
+    StructField("model",        StringType(),  True),
+    StructField("engines",      IntegerType(), True),
+    StructField("seats",        IntegerType(), True),
+    StructField("speed",        IntegerType(), True),
+    StructField("engine",       StringType(),  True)
+])
+
+schema_flights = StructType([
+    StructField("year",      IntegerType(), True),
+    StructField("month",     IntegerType(), True),
+    StructField("day",       IntegerType(), True),
+    StructField("dep_time",  StringType(),  True),
+    StructField("dep_delay", IntegerType(), True),
+    StructField("arr_time",  StringType(),  True),
+    StructField("arr_delay", IntegerType(), True),
+    StructField("carrier",   StringType(),  True),
+    StructField("tailnum",   StringType(),  True),
+    StructField("flight",    StringType(),  True),
+    StructField("origin",    StringType(),  True),
+    StructField("dest",      StringType(),  True),
+    StructField("air_time",  IntegerType(), True),
+    StructField("distance",  IntegerType(), True),
+    StructField("hour",      IntegerType(), True),
+    StructField("minute",    IntegerType(), True),
+])
+
+df_airports = (spark.getOrCreate().read
+               .format('csv')
+               .option("inferSchema", "false") 
+               .option('header', "true")
+               .schema(schema_airports)
+               .load('./airports.csv'))
+df_planes = (spark.getOrCreate().read
+             .format('csv')
+             .option('inferSchema', 'false')
+             .option('header', 'true')
+             .schema(schema_planes)
+             .load('./planes.csv'))
+df_flights = (spark.getOrCreate().read
+              .format('csv')
+              .option("inferSchema", "false")
+              .option("header", "true")
+              .load('./flights.csv'))
+
+df_airports.createOrReplaceTempView('airports_view')
+df_flights.createOrReplaceTempView('flights_view')
+df_planes.createOrReplaceTempView('planes_view')
+
+#RDDs
+rdd_airports   = df_airports.rdd
+rdd_df_planes  = df_planes.rdd
+rdd_df_flights = df_flights.rdd
+
+#para ver o dataframe
+df_airports.show(20)
+#para ver o RDD
+df_airports.rdd.take(20)
+
+
+
