@@ -1,0 +1,263 @@
+Semana 2
+Dicionário
+faa (string): Identificador do aeroporto determinado pela Federal Aviation Administration. Formato: 3-
+5 caracteres alfanuméricos.
+name (string): Nome do aeroporto.
+lat (float): Latitude do aeroporto. Intervalo de valores .
+lon (float): Longitude do aeroporto Intervalo de valores .
+alt (int): Altitude do aeroporto. Unidade de medida em pés. Intervalo de valores .
+tz (float): Fuso horário baseado no deslocamento de horas a partir de UTC/GMT. Intervalo de valores
+. Pode ser fuso fracionário [1]
+dst (category): Horário de verão. Descrição dos possíveis valores [2]:
+E (Europe)
+A (US/Canada)
+S (South America)
+O (Australia)
+Z (New Zealand)
+N (None)
+U (Unknown)
+
+Considere o dataset airports.csv para realizar as seguintes tarefas:
+1. Crie a coluna qa_faa e aponte inconsistências da coluna faa de acordo com as regras abaixo.
+M : Indica que está com dado faltante.
+F : Indica que não respeita o formator de 3-5 caracteres alfanuméricos.
+2. Crie a coluna qa_name e aponte inconsistências da coluna name de acordo com as regras abaixo.
+M : Indica que está com dado faltante.
+3. Crie a coluna qa_lat e aponte inconsistências da coluna lat de acordo com as regras abaixo.
+M : Indica que está com dado faltante.
+I : Indica que o valor excede o intervalo .
+A : Indica que o valor é alfanumérico.
+4. Crie a coluna qa_lon e aponte inconsistências da coluna lon de acordo com as regras abaixo.
+M : Indica que está com dado faltante.
+I : Indica que o valor excede o intervalo .
+A : Indica que o valor é alfanumérico.
+5. Crie a coluna qa_alt e aponte inconsistências da coluna alt de acordo com as regras abaixo.
+M : Indica que está com dado faltante.
+I : Indica que o valor excede o intervalo .
+A : Indica que o valor é alfanumérico.
+6. Crie a coluna qa_tz e aponte inconsistências da coluna tz de acordo com as regras abaixo.
+M : Indica que está com dado faltante.
+I : Indica que o valor excede o intervalo .
+A : Indica que o valor é alfanumérico.
+7. Crie a coluna qa_dst e aponte inconsistências da coluna dst de acordo com as regras abaixo.
+M : Indica que está com dado faltante.
+C : Indica que o valor não pertence a nenhuma das categorias esperadas: E, A, S, O, Z, N, U
+N : Indica que o valor é numérico.
+
+Semana 3
+Dicionário
+tailnum (string): Identificação do avião. Formato "N-Number", é composto por 5-6 caracteres.
+Primeira letra é sempre "N".
+De 1 a 4 digitos seguidos por 1 letra (ex. N1234Z).
+De 1 a 3 digitos seguidos por 2 letras (ex. N123AZ).
+Não deve conter 0 (zero) como primeiro digito, e não deve conter as letras "I" ou "O".
+year (int): Ano de fabricação do avião. Intervalo de valores
+type (string): Tipo do avião.
+manufacturer (string): Nome do fabricante.
+model (string): Modelo do avião
+engines (int): Número de motores. Intervalo de valores
+seats (int): Número de assentos. Intervalo de valores
+speed (int): Velocidade média de cruseiro. Unidade de medida em milhas. Intervalo de valores
+engine (category): Tipo de motor.
+
+Considere o dataset planes.csv para realizar as seguintes tarefas:
+1. Crie a coluna qa_tailnum e aponte inconsistências da coluna tailnum de acordo com as regras
+abaixo.
+M : Indica que está com dado faltante.
+S : Indica que não tem exatamente 5 caracteres.
+F : Indica que não respeita o formato esperado (ex. N1234Z ou N123AZ).
+FN : Indica que não inicia com a letra "N".
+FE : Indica que contém caracteres inválidos ("I", "O", ou 0 como primeiro digito).
+2. Crie a coluna qa_year e aponte inconsistências da coluna year de acordo com as regras abaixo.
+M : Indica que está com dado faltante.
+I : Indica que o valor excede o intervalo .
+3. Crie a coluna qa_type e aponte inconsistências da coluna type de acordo com as regras abaixo.
+M : Indica que está com dado faltante.
+C : Indica que o valor não pertence a nenhuma categoria esperada:
+Fixed wing multi engine
+Fixed wing single engine
+Rotorcraft
+4. Crie a coluna qa_manufacturer e aponte inconsistências da coluna manufacturer de acordo com
+as regras abaixo.
+M : Indica que está com dado faltante.
+C : Indica que o valor não pertence a nenhuma categoria esperada:
+AIRBUS
+BOEING
+BOMBARDIER
+CESSNA
+EMBRAER
+SIKORSKY
+CANADAIR
+PIPER
+MCDONNELL DOUGLAS
+CIRRUS
+BELL
+KILDALL GARY
+LAMBERT RICHARD
+BARKER JACK
+ROBINSON HELICOPTER
+GULFSTREAM
+MARZ BARRY
+5. Crie a coluna qa_model e aponte inconsistências da coluna model de acordo com as regras abaixo.
+M : Indica que está com dado faltante.
+F : Indica que não respeita o formato esperado
+Modelos AIRBUS devem começar com "A"
+Modelos BOEING devem começar com "7"
+Modelos BOMBARDIER e CANADAIR devem começar com "CL"
+Modelos MCDONNELL DOUGLAS devem começar com "MD" ou "DC"
+6. Crie a coluna qa_engines e aponte inconsistências da coluna engines de acordo com as regras
+abaixo.
+M : Indica que está com dado faltante.
+I : Indica que o valor excede o intervalo .
+A : Indica que o valor é alfanumérico.
+7. Crie a coluna qa_seats e aponte inconsistências da coluna seats de acordo com as regras abaixo.
+M : Indica que está com dado faltante.
+I : Indica que o valor excede o intervalo .
+A : Indica que o valor é alfanumérico.
+8. Crie a coluna qa_speed e aponte inconsistências da coluna speed de acordo com as regras abaixo.
+M : Indica que está com dado faltante.
+I : Indica que o valor excede o intervalo .
+A : Indica que o valor é alfanumérico.
+9. Crie a coluna qa_engine e aponte inconsistências da coluna engine de acordo com as regras
+abaixo.
+M : Indica que está com dado faltante.
+C : Indica que o valor não pertence a nenhuma categoria esperada:
+Turbo-fan
+Turbo-jet
+Turbo-prop
+Turbo-shaft
+4 Cycle
+
+
+Semana 3
+Dicionário
+year (int), month (int), day (int): Ano, Mês, Dia de partida.
+hour (int), minute (int): Hora e Minuto agendada para partida.
+dep_time (string), arr_time (string): Horario real de partida/chegada do voo no horário local. Formato:
+HHMM ou HMM.
+dep_delay (int), arr_delay (int): Atraso de partida/chegada do voo em minutos. Valores negativos
+representam partidas/chegadas antecipadas.
+carrier (string): Identificador da empresa aérea.
+tailnum (string): Identificador do avião. Veja dataset planes.
+flight (string): Identificador do vôo. Formato: 4 dígitos (preenchidos com zero a esquerda caso
+necessário).
+origin (string), dest (string): Identificadores dos aeroportos de origem e destino. Veja dataset airports.
+air_time (int): Tempo de vôo. Unidade de medida em minutos. Intervalo de dados .
+distance (int): Distancia entre aeroportos. Unidade de medida em milhas. Intervalo de valores 
+
+Considere o dataset flights.csv para realizar as seguintes tarefas:
+1. Crie a coluna qa_year_month_day e aponte inconsistências das colunas year , month , day de
+acordo com as regras abaixo.
+MY : Indica que está com dado faltante no ano.
+MM : Indica que está com dado faltante no mes.
+MD : Indica que está com dado faltante no dia.
+IY : Indica que o valor excede o intervalo no ano.
+IM : Indica que o valor excede o intervalo no mês.
+ID : Indica que o valor excede o intervalo no dia. No mês de Fevereiro o intervalo é
+.
+2. Crie a coluna qa_hour_minute e aponte inconsistencias das colunas hour e minute de acordo
+com as regras abaixo.
+MH : Indica que está com dado faltante na hora.
+MM : Indica que está com dado faltante no minuto.
+IH : Indica que o valor excede o intervalo na hora.
+IM : Indica que o valor excede o intervalo no minuto.
+3. Crie a coluna qa_dep_arr_time e aponte inconsistências da coluna dep_time e arr_time de
+acordo com as regras abaixo.
+MD : Indica que está com dado faltante no dep_time .
+MA : Indica que está com dado faltante no arr_time .
+FD : Indica que não respeita o formato esperado (HHMM ou HMM) no dep_time .
+FA : Indica que não respeita o formato esperado (HHMM ou HMM) no arr_time .
+4. Crie a coluna qa_dep_arr_delay e aponte inconsistências da coluna dep_delay e arr_delay de
+acordo com as regras abaixo.
+MD : Indica que está com dado faltante no dep_delay .
+MA : Indica que está com dado faltante no arr_delay .
+5. Crie a coluna qa_carrier e aponte inconsistências da coluna carrier de acordo com as regras
+abaixo.
+M : Indica que está com dado faltante.
+F : Indica que não respeita o formato esperado (2 caracteres alfanuméricos).
+6. Crie a coluna qa_tailnum e aponte inconsistências da coluna tailnum de acordo com as regras
+abaixo.
+M : Indica que está com dado faltante.
+S : Indica que não tem o número de caracteres esperado.
+F : Indica que não respeita o formato esperado (ex. N1234Z ou N123AZ).
+FN : Indica que não inicia com a letra "N".
+FE : Indica que contém caracteres inválidos ("I", "O", ou 0 como primeiro digito).
+7. Crie a coluna qa_flight e aponte inconsistências da coluna flight de acordo com as regras
+abaixo.
+M : Indica que está com dado faltante.
+F : Indica que não respeita o formato esperado (4 caracteres numéricos).
+8. Crie a coluna qa_origin_dest e aponte inconsistências da coluna origin , dest de acordo com
+as regras abaixo.
+MO : Indica que está com dado faltante no origin .
+MD : Indica que está com dado faltante no dest .
+FO : Indica que não respeita o formato esperado (3 caracteres alfanuméricos) no origin .
+FD : Indica que não respeita o formato esperado (3 caracteres alfanuméricos) no dest .
+9. Crie a coluna qa_air_time e aponte inconsistencias da coluna air_time de acordo com as regras
+abaixo.
+M : Indica que está com dado faltante.
+I : Indica que o valor excede o intervalo
+10. Crie a coluna qa_distance e aponte inconsistências da coluna distance de acordo com as regras
+abaixo.
+M : Indica que está com dado faltante.
+I : Indica que o valor excede o intervalo .
+11. Crie a coluna qa_distance_airtime e aponte inconsistências entre as colunas distance e
+air_time de acordo com as regras abaixo.
+M : Indica que está com distance ou air_time faltante.
+TL : Indica que a viagem é longa de acordo com a condição:
+.
+TS : Indica que a viagem é curta de acordo com a condição: .
+TR : Indica que a viagem é normal caso as duas anteriores não sejam verdade.
+
+
+Perguntas para Online Retail
+1. Qual o valor de Gift Cards vendidos no total? Considere StockCode="gift_0001"
+2. Qual o valor total de Gift Cards vendidos por mês? Considere StockCode="gift_0001"
+3. Qual o valor total de amostras que foram concedidas? Consider StockCode="S"
+4. Qual o produto mais vendido?
+5. Qual o produto mais vendido por mês?
+6. Qual hora do dia tem maior valor de vendas?
+7. Qual mês do ano tem maior valor de vendas?
+8. Qual o produto mais vendido no mês do ano tem maior valor de vendas?
+9. Qual país tem o maior valor de vendas?
+10. Qual país tem o maior valor de vendas manual? Considere StockCode="M"
+11. Qual nota fiscal tem maior valor de venda?
+12. Qual nota fiscal tem maior número de itens?
+13. Qual cliente compra com maior frequência?
+Dica:
+Para determinar valor da venda considere: Quantity * UnitPrice
+Desconsidere StockCode = PADS
+Quantity negativa representa valor que saiu do caixa e não podem ser considerados como venda
+
+Perguntas para Communities and Crime:
+1. Qual comunidade tem maior orçamento policial?
+2. Qual comunidade tem maior número de crimes violentos?
+3. Qual comunidade tem maior população?
+4. Qual comunidade tem maior população negra?
+5. Qual comunidade tem maior percentual de pessoas que recebem salário?
+6. Qual comunidade tem maior população jovem?
+7. Qual a correlação entre orçamento policial e número de crimes violentos?
+8. Qual a correlação entre percentual de policiais brancos e orçamento policial?
+9. Qual a correlação entre população e orçamento policial?
+10. Qual a correlação entre população e número de crimes violentos?
+11. Qual a correlação entre a mediana do salário familiar e número de crimes violentos?
+12. Qual raça é predominante nas 10 comunidades com maior número de crimes violentos?
+Dica:
+
+Perguntas para Census Income
+1. Qual classe trabalhadora faz mais que $50K ao ano?
+2. Qual é a hora de trabalho semanal média por raça?
+3. Qual é a proporção entre cada sexo?
+4. Qual é a proporção entre cada sexo?
+5. Qual é a ocupação trabalha em média mais horas por semana?
+6. Qual é a ocupação mais comum por nível de educação?
+7. Qual é a ocupação mais comum entre o sexo masculino e feminino?
+8. Qual é o maior nível de escolaridade por raça?
+9. Qual é o nível de educação, sexo, e raça mais comum das pessoas consideradas self-employed?
+10. Qual é a razão entre pessoas casadas e não casadas?
+11. Qual é a raça mais comum dentre as pessoas não casadas?
+12. Qual é a renda mais comum para pessoas casadas e não casadas?
+13. Qual é a renda mais comum para cada sexo?
+14. Qual é a renda mais comum para cada nacionalidade?
+15. Qual é a razão entre pessoas brancas e não brancas?
+Dica:
+Valores faltantes estão marcados com = PADS
